@@ -3,6 +3,9 @@
 # TODO:
 # - proxy
 # - settings file or commandline
+# - JSON/YAML output
+# - multithreading
+# - convert to class
 
 from timeit import default_timer as timer
 from urllib.parse import urlparse
@@ -15,19 +18,27 @@ v_print = lambda *a: None  # do-nothing function
 services = {}
 timeout = 60
 
-# From https://stackoverflow.com/a/1140822
+def set_timeout(time):
+    timeout = time
+
 def get_status_code(scheme, host, path="/"):
+    """ Select a function to use to check status, based on scheme.
+    """
+    if scheme in ['http', 'https']:
+        get_http_status_code(scheme, host, path)
+    else:
+        raise ValueError("Unknown scheme {}".format(scheme))
+
+def get_http_status_code(scheme, host, path="/"):
     """ This function retreives the status code of a website by requesting
         HEAD data from the host. This means that it only requests the headers.
-        If the host cannot be reached or something else goes wrong, it returns
         None instead.
+        Adapted from https://stackoverflow.com/a/1140822
     """
     if scheme == 'http':
         http_client_connection = http.client.HTTPConnection
     elif scheme == 'https':
         http_client_connection = http.client.HTTPSConnection
-    else:
-        raise ValueError("Unknown scheme {}".format(scheme))
 
     try:
         conn = http_client_connection(host, timeout=timeout)
