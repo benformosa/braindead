@@ -1,0 +1,4 @@
+---
+- name: Something
+  url: http://www.something.com/
+  expect_code: 200
