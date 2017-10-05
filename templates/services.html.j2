@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Check Services</title>
+    </head>
+    <body>
+        <h1>Check Services</h1>
+
+        <table>
+            <tr>
+                <th>Service</th>
+                <th>OK</th>
+                <th>Status</th>
+                <th>Response time (seconds)</th>
+            </tr>
+        {%- for service in services %}
+            <tr>
+                <td><a href="{{ service.url }}">{{ service.name }}</a></td>
+                <td>{{ service.ok }}</td>
+                <td>{{ service.status }}</td>
+                <td>{{ service.response_time }}</td>
+            </tr>
+        {%- endfor %}
+        </table>
+
+    </body>
+</html>

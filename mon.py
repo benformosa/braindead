@@ -8,44 +8,34 @@ from timeit import default_timer as timer
 from urllib.parse import urlparse
 import argparse
 import http.client
+import socket
 import yaml
 
+v_print = lambda *a: None  # do-nothing function
 services = {}
 timeout = 60
 
 # From https://stackoverflow.com/a/1140822
-def get_status_code(schema, host, path="/"):
-    if schema == 'http':
-        return get_http_status_code(host, path)
-    elif schema == 'https':
-        return get_https_status_code(host, path)
+def get_status_code(scheme, host, path="/"):
+    """ This function retreives the status code of a website by requesting
+        HEAD data from the host. This means that it only requests the headers.
+        If the host cannot be reached or something else goes wrong, it returns
+        None instead.
+    """
+    if scheme == 'http':
+        http_client_connection = http.client.HTTPConnection
+    elif scheme == 'https':
+        http_client_connection = http.client.HTTPSConnection
     else:
-        return None
+        raise ValueError("Unknown scheme {}".format(scheme))
 
-def get_http_status_code(host, path="/"):
-    """ This function retreives the status code of a website by requesting
-        HEAD data from the host over HTTP. This means that it only requests the headers.
-        If the host cannot be reached or something else goes wrong, it returns
-        None instead.
-    """
     try:
-        conn = http.client.HTTPConnection(host, timeout=timeout)
+        conn = http_client_connection(host, timeout=timeout)
         conn.request("HEAD", path)
         return conn.getresponse().status
-    except http.client.HTTPException as e:
+    except socket.timeout as e:
         v_print(1, e)
-        return None
-
-def get_https_status_code(host, path="/"):
-    """ This function retreives the status code of a website by requesting
-        HEAD data from the host over HTTPS. This means that it only requests the headers.
-        If the host cannot be reached or something else goes wrong, it returns
-        None instead.
-    """
-    try:
-        conn = http.client.HTTPSConnection(host, timeout=timeout)
-        conn.request("HEAD", path)
-        return conn.getresponse().status
+        return 'Socket Timeout'
     except http.client.HTTPException as e:
         v_print(1, e)
         return None
@@ -94,6 +84,8 @@ def main():
     parser.add_argument('-s', '--services', metavar='FILE', type=str,
             default='services.yml',
             help="Path to YAML file defining services to check")
+    parser.add_argument('-w', '--wait', metavar='SECONDS', type=int,
+            default=10, help="Seconds to wait before timeout.")
     parser.add_argument('-v', '--verbosity', action="count",
             help="increase output verbosity (e.g., -vv is more than -v)")
     args = parser.parse_args() 
