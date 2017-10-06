@@ -4,7 +4,7 @@
 # - proxy
 # - settings file or commandline
 # - JSON/YAML output
-# - convert to class - begin as constructor
+# - convert to class
 
 from timeit import default_timer as timer
 from urllib.parse import urlparse
@@ -14,12 +14,9 @@ import socket
 import threading
 import yaml
 
-v_print = lambda *a: None  # do-nothing function
 services = []
 timeout = 10
-
-def set_timeout(time):
-    timeout = time
+v_print = lambda *a: None  # do-nothing function
 
 def get_status_code(scheme, host, path="/"):
     """ Select a function to use to check status, based on scheme.
@@ -85,16 +82,12 @@ def check_service(service):
 
     v_print(1, "{} - {}".format(service['name'], service['ok']))
 
-def check_services(services):
-    for service in services:
-        check_service(service)
-    return services
-
 def check_services_threaded(services):
-    """Check status for an array of dicts.
+    """ Check status for an array of dicts.
     """
     threads = []
     for service in services:
+        # Create and start a thread for each service
         v_print(3, "Creating thread 'Check service {}'".format(service['name']))
         t = threading.Thread(
                 name="Check service {}".format(service['name']),
@@ -104,6 +97,7 @@ def check_services_threaded(services):
         t.start()
         threads.append(t)
 
+    # Wait for each service check to complete
     for t in threads:
         v_print(3, "Joining thread 'Check service {}'".format(service['name']))
         t.join()
