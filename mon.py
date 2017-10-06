@@ -1,11 +1,5 @@
 #!/usr/bin/python3
 
-# TODO:
-# - proxy
-# - settings file or commandline
-# - JSON/YAML output
-# - convert to class
-
 from timeit import default_timer as timer
 from urllib.parse import urlparse
 import argparse
