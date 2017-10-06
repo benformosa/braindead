@@ -4,19 +4,19 @@
 # - proxy
 # - settings file or commandline
 # - JSON/YAML output
-# - multithreading
-# - convert to class
+# - convert to class - begin as constructor
 
 from timeit import default_timer as timer
 from urllib.parse import urlparse
 import argparse
 import http.client
 import socket
+import threading
 import yaml
 
 v_print = lambda *a: None  # do-nothing function
-services = {}
-timeout = 60
+services = []
+timeout = 10
 
 def set_timeout(time):
     timeout = time
@@ -25,7 +25,8 @@ def get_status_code(scheme, host, path="/"):
     """ Select a function to use to check status, based on scheme.
     """
     if scheme in ['http', 'https']:
-        get_http_status_code(scheme, host, path)
+        v_print(3, "      HTTP(S) scheme")
+        return get_http_status_code(scheme, host, path)
     else:
         raise ValueError("Unknown scheme {}".format(scheme))
 
@@ -40,6 +41,8 @@ def get_http_status_code(scheme, host, path="/"):
     elif scheme == 'https':
         http_client_connection = http.client.HTTPSConnection
 
+    v_print(3, "        Attempting {} connection to host {}".format(scheme, host))
+
     try:
         conn = http_client_connection(host, timeout=timeout)
         conn.request("HEAD", path)
@@ -51,7 +54,7 @@ def get_http_status_code(scheme, host, path="/"):
         v_print(1, e)
         return None
 
-def check_service(service, print_output=False):
+def check_service(service):
     """ Given a dict defining a service, check the service's status and update the
     dict.
     """
@@ -80,14 +83,31 @@ def check_service(service, print_output=False):
     if service['expect_code'] == service['status']:
         service['ok'] = 'OK'
 
-    if print_output:
-        print("{} - {}".format(service['name'], service['ok']))
+    v_print(1, "{} - {}".format(service['name'], service['ok']))
 
-def check_services(services, print_output=False):
+def check_services(services):
+    for service in services:
+        check_service(service)
+    return services
+
+def check_services_threaded(services):
     """Check status for an array of dicts.
     """
+    threads = []
     for service in services:
-        check_service(service, print_output)
+        v_print(3, "Creating thread 'Check service {}'".format(service['name']))
+        t = threading.Thread(
+                name="Check service {}".format(service['name']),
+                target=check_service,
+                args=(service,)
+            )
+        t.start()
+        threads.append(t)
+
+    for t in threads:
+        v_print(3, "Joining thread 'Check service {}'".format(service['name']))
+        t.join()
+
     return services
 
 def main():
@@ -112,6 +132,7 @@ def main():
     global v_print
     v_print = _v_print
  
+    v_print(3, "Opening services file {}".format(args.services))
     # Open services file. Expects an array of dicts.
     with open(args.services, 'r') as stream:
         try:
@@ -119,7 +140,11 @@ def main():
         except yaml.YAMLError as e:
             print(e)
 
-    check_services(services, print_output=True)
+    v_print(3, "Checking services")
+    check_services_threaded(services)
+
+    for service in services:
+        print("{} - {}".format(service['name'], service['ok']))
 
 if __name__ == '__main__':
     main()

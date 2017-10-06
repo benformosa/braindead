@@ -21,7 +21,7 @@ def services():
         except yaml.YAMLError as e:
             print(e)
 
-    checked_services = mon.check_services(services)
+    checked_services = mon.check_services_threaded(services)
     
     return flask.render_template('services.html.j2', services=checked_services)
 
