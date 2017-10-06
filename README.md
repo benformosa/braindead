@@ -28,14 +28,17 @@ Specify the services you want to monitor as a YAML file. You should define a seq
 - name: Another website
   url: http://example.net/login/
   expect_code: 401
+- name: TCP Service
+  url: tcp://portquiz.net:666
 ```
 
 ### Supported schemes
 
-| Scheme | URL Format | Description | Default Port |Default expect_code |
+| Scheme | URL Format | Description | Default Port | Default expect_code |
 |--------|------------|-------------|--------------|--------------------|
 | http | http://host[:port][/path] | Get the HTTP status code of a web page. | 80 | 200 |
 | https | https://host[:port][/path] | Get the HTTP status code of a web page. | 443 | 200 |
+| tcp | tcp://host:port | Test for listening TCP service. | N/A | 1 |
 
 ## Usage
 
@@ -60,4 +63,4 @@ Alternately, use the Docker image to run the web app.
 * Support config file from command line
 * Convert to a class
 * Add an enable field to services
-* Support tcp service check
+* Option to only check services file

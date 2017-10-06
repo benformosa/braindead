@@ -1,3 +1,7 @@
 ---
-- name: Something
-  url: http://www.something.com/
+- name: HTTPS
+  url: https://www.eff.org/
+- name: HTTP
+  url: http://portquiz.net:1234
+- name: TCP
+  url: tcp://example.com:80
