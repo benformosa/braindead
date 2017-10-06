@@ -9,8 +9,11 @@
 from timeit import default_timer as timer
 from urllib.parse import urlparse
 import argparse
+import csv
 import http.client
+import json
 import socket
+import sys
 import threading
 import yaml
 
@@ -110,7 +113,11 @@ def main():
             default='services.yml',
             help="Path to YAML file defining services to check")
     parser.add_argument('-w', '--wait', metavar='SECONDS', type=int,
-            default=10, help="Seconds to wait before timeout.")
+            default=10, help="Seconds to wait before timeout")
+    parser.add_argument('-o', '--output', metavar='FORMAT', type=str,
+            choices=['plain', 'yaml', 'json', 'csv'],
+            default='plain',
+            help="Output format")
     parser.add_argument('-v', '--verbosity', action="count",
             help="increase output verbosity (e.g., -vv is more than -v)")
     args = parser.parse_args() 
@@ -137,8 +144,22 @@ def main():
     v_print(3, "Checking services")
     check_services_threaded(services)
 
-    for service in services:
-        print("{} - {}".format(service['name'], service['ok']))
+    if args.output == 'plain':
+        template = "{}\t\t{}\t{}\t{}"
+        print(template.format('Name', 'OK', 'Status', 'Response (sec)'))
+        for service in services:
+            print(template.format(service['name'], service['ok'], service['status'], service['response_time']))
+    elif args.output == 'csv':
+        fields = ['name', 'ok', 'status', 'response_time', 'url', 'expect_code']
+        writer = csv.DictWriter(sys.stdout, fields, dialect='excel')
+        writer.writeheader()
+
+        for service in services:
+            writer.writerow(service)
+    elif args.output == 'yaml':
+        print(yaml.dump(services, default_flow_style=False))
+    elif args.output == 'json':
+        print(json.dumps(services, sort_keys=True, indent=2))
 
 if __name__ == '__main__':
     main()
