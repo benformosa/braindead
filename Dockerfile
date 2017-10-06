@@ -9,4 +9,4 @@ COPY requirements.txt /usr/src/app
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . /usr/src/app
 
-CMD ["web.py"]
+CMD ["/usr/local/bin/python3", "web.py"]

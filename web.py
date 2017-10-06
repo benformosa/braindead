@@ -22,8 +22,8 @@ def services():
             print(e)
 
     checked_services = mon.check_services_threaded(services)
-    
+
     return flask.render_template('services.html.j2', services=checked_services)
 
 if __name__ == '__main__':
-    app.run(debug=True,host='0.0.0.0', port=80)
+    app.run(debug=True, host='0.0.0.0', port=80)

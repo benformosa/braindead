@@ -151,6 +151,9 @@ def check_service(service):
 def check_services_threaded(services):
     """ Check status for an array of dicts.
     """
+
+    services = validate_services(services)
+
     threads = []
     for service in services:
         # Create and start a thread for each service
@@ -203,8 +206,6 @@ def main():
             services = yaml.load(stream)
         except yaml.YAMLError as e:
             print(e)
-
-    services = validate_services(services)
 
     v_print(3, "Checking services")
     check_services_threaded(services)
